@@ -109,17 +109,17 @@ class PID:
     # delta_time
 
     # command
-    # TODO by student
+    # TODO (complete) by student
     # use
-    # control_cmd
-    # error, error_integral, error_derivative
+    # error_integral, error_derivative
     # self.gains
+    control_cmd = self.gains['P']*error
 
     # saturation of the control command
-    # TODO by student
-    # use
-    # control_cmd
-    # self.ctr_cmd_sat
+    if(control_cmd>self.ctr_cmd_sat['Max']):
+      control_cmd = self.ctr_cmd_sat['Max']
+    if(control_cmd<self.ctr_cmd_sat['Min']):
+      control_cmd = self.ctr_cmd_sat['Min']
 
     # Update timestamp
     self.prev_time_stamp_ros = curr_time_stamp
