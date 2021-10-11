@@ -1,0 +1,14 @@
+<!-- -->
+<launch>
+
+	<arg name="ars_motion_controller_node_name" 	default="ars_motion_controlller_node" />
+	<arg name="screen" 	default="screen" />
+
+
+  <node name="$(arg ars_motion_controller_node_name)" pkg="ars_motion_controller_pid" type="ars_motion_controller_ros_node.py" output="$(arg screen)" >
+
+
+  </node>
+
+
+</launch>
