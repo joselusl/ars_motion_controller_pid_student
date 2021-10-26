@@ -105,7 +105,7 @@ class ArsMotionControllerRos:
 
     
     # Package path
-    pkg_path = rospkg.RosPack().get_path('ars_motion_controller')
+    pkg_path = rospkg.RosPack().get_path('ars_motion_controller_pid')
     
 
     #### READING PARAMETERS ###
