@@ -10,8 +10,6 @@ import os
 
 import rospy
 
-import tf_conversions as tf
-
 
 #
 import ars_lib_helpers
