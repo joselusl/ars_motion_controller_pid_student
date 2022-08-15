@@ -10,7 +10,6 @@ import os
 
 import rospy
 
-
 #
 import ars_lib_helpers
 
@@ -146,49 +145,77 @@ class ArsMotionController:
     self.pos_loop_out_lin_cmd = np.zeros((3,), dtype=float)
     self.pos_loop_out_ang_cmd = np.zeros((1,), dtype=float)
 
+    # End
+    return
+
+
+  def setConfigParameters(self, config_param):
+
     # PIDs
-    # Pos
-    #
-    self.flag_ctr_pos_hor = True
-    self.pos_hor_pid = ars_pid.PID()
-    self.pos_hor_pid.setGainsPID(gain_P=1.0)
-    self.pos_hor_pid.setAntiWindUp(-0.1, 0.1)
-    self.pos_hor_pid.setCtrCmdSaturation(-5.0, 5.0)
-    #
-    self.flag_ctr_pos_z = True
-    self.pos_z_pid = ars_pid.PID()
-    self.pos_z_pid.setGainsPID(gain_P=1.0)
-    self.pos_z_pid.setAntiWindUp(-0.1, 0.1)
-    self.pos_z_pid.setCtrCmdSaturation(-5.0, 5.0)
-    #
-    self.flag_ctr_att_yaw = True
-    self.att_yaw_pid = ars_pid.PID()
-    self.att_yaw_pid.setGainsPID(gain_P=1.0)
-    self.att_yaw_pid.setAntiWindUp(-0.1, 0.1)
-    self.att_yaw_pid.setCtrCmdSaturation(-5.0, 5.0)
 
     # Vel
     #
-    self.flag_ctr_vel_lin_hor = True
-    self.vel_lin_hor_pid = ars_pid.PID()
-    self.vel_lin_hor_pid.setGainsPID(gain_P=1.0)
-    self.vel_lin_hor_pid.setAntiWindUp(-0.1, 0.1)
-    self.vel_lin_hor_pid.setCtrCmdSaturation(-1.0, 1.0)
+    self.flag_ctr_vel_lin_hor = config_param['control_loop_vel']['control_loop_vel_lin_hor']['flag_ctr_vel_lin_hor']
+    self.vel_lin_hor_pid.setGainsPID(gain_P=config_param['control_loop_vel']['control_loop_vel_lin_hor']['PID']['gains']['gain_P'],
+                                      gain_I=config_param['control_loop_vel']['control_loop_vel_lin_hor']['PID']['gains']['gain_I'],
+                                      gain_D=config_param['control_loop_vel']['control_loop_vel_lin_hor']['PID']['gains']['gain_D'])
+    self.vel_lin_hor_pid.setAntiWindUp(config_param['control_loop_vel']['control_loop_vel_lin_hor']['PID']['anti_wind_up'][0],
+                                        config_param['control_loop_vel']['control_loop_vel_lin_hor']['PID']['anti_wind_up'][1])
+    self.vel_lin_hor_pid.setCtrCmdSaturation(config_param['control_loop_vel']['control_loop_vel_lin_hor']['PID']['saturation'][0],
+                                              config_param['control_loop_vel']['control_loop_vel_lin_hor']['PID']['saturation'][1])
     #
-    self.flag_ctr_vel_lin_z = True
-    self.vel_lin_z_pid = ars_pid.PID()
-    self.vel_lin_z_pid.setGainsPID(gain_P=1.0)
-    self.vel_lin_z_pid.setAntiWindUp(-0.1, 0.1)
-    self.vel_lin_z_pid.setCtrCmdSaturation(-1.0, 1.0)
+    self.flag_ctr_vel_lin_z = config_param['control_loop_vel']['control_loop_vel_lin_z']['flag_ctr_vel_lin_z']
+    self.vel_lin_z_pid.setGainsPID(gain_P=config_param['control_loop_vel']['control_loop_vel_lin_z']['PID']['gains']['gain_P'],
+                                    gain_I=config_param['control_loop_vel']['control_loop_vel_lin_z']['PID']['gains']['gain_I'],
+                                    gain_D=config_param['control_loop_vel']['control_loop_vel_lin_z']['PID']['gains']['gain_D'])
+    self.vel_lin_z_pid.setAntiWindUp(config_param['control_loop_vel']['control_loop_vel_lin_z']['PID']['anti_wind_up'][0],
+                                        config_param['control_loop_vel']['control_loop_vel_lin_z']['PID']['anti_wind_up'][1])
+    self.vel_lin_z_pid.setCtrCmdSaturation(config_param['control_loop_vel']['control_loop_vel_lin_z']['PID']['saturation'][0],
+                                              config_param['control_loop_vel']['control_loop_vel_lin_z']['PID']['saturation'][1])
     #
-    self.flag_ctr_vel_ang_z = True
-    self.vel_ang_z_pid = ars_pid.PID()
-    self.vel_ang_z_pid.setGainsPID(gain_P=1.0)
-    self.vel_ang_z_pid.setAntiWindUp(-0.1, 0.1)
-    self.vel_ang_z_pid.setCtrCmdSaturation(-1.0, 1.0)
+    self.flag_ctr_vel_ang_z = config_param['control_loop_vel']['control_loop_vel_ang_z']['flag_ctr_vel_ang_z']
+    self.vel_ang_z_pid.setGainsPID(gain_P=config_param['control_loop_vel']['control_loop_vel_ang_z']['PID']['gains']['gain_P'],
+                                    gain_I=config_param['control_loop_vel']['control_loop_vel_ang_z']['PID']['gains']['gain_I'],
+                                    gain_D=config_param['control_loop_vel']['control_loop_vel_ang_z']['PID']['gains']['gain_D'])
+    self.vel_ang_z_pid.setAntiWindUp(config_param['control_loop_vel']['control_loop_vel_ang_z']['PID']['anti_wind_up'][0],
+                                        config_param['control_loop_vel']['control_loop_vel_ang_z']['PID']['anti_wind_up'][1])
+    self.vel_ang_z_pid.setCtrCmdSaturation(config_param['control_loop_vel']['control_loop_vel_ang_z']['PID']['saturation'][0],
+                                              config_param['control_loop_vel']['control_loop_vel_ang_z']['PID']['saturation'][1])
+
+    # Pos
+    #
+    self.flag_ctr_pos_hor = config_param['control_loop_pos']['control_loop_pos_hor']['flag_ctr_pos_hor']
+    self.pos_hor_pid.setGainsPID(gain_P=config_param['control_loop_pos']['control_loop_pos_hor']['PID']['gains']['gain_P'],
+                                  gain_I=config_param['control_loop_pos']['control_loop_pos_hor']['PID']['gains']['gain_I'],
+                                  gain_D=config_param['control_loop_pos']['control_loop_pos_hor']['PID']['gains']['gain_D'])
+    self.pos_hor_pid.setAntiWindUp(config_param['control_loop_pos']['control_loop_pos_hor']['PID']['anti_wind_up'][0],
+                                    config_param['control_loop_pos']['control_loop_pos_hor']['PID']['anti_wind_up'][1])
+    self.pos_hor_pid.setCtrCmdSaturation(config_param['control_loop_pos']['control_loop_pos_hor']['PID']['saturation'][0],
+                                          config_param['control_loop_pos']['control_loop_pos_hor']['PID']['saturation'][1])
+    #
+    self.flag_ctr_pos_z = config_param['control_loop_pos']['control_loop_pos_ver']['flag_ctr_pos_z']
+    self.pos_z_pid.setGainsPID(gain_P=config_param['control_loop_pos']['control_loop_pos_ver']['PID']['gains']['gain_P'],
+                                  gain_I=config_param['control_loop_pos']['control_loop_pos_ver']['PID']['gains']['gain_I'],
+                                  gain_D=config_param['control_loop_pos']['control_loop_pos_ver']['PID']['gains']['gain_D'])
+    self.pos_z_pid.setAntiWindUp(config_param['control_loop_pos']['control_loop_pos_ver']['PID']['anti_wind_up'][0],
+                                    config_param['control_loop_pos']['control_loop_pos_ver']['PID']['anti_wind_up'][1])
+    self.pos_z_pid.setCtrCmdSaturation(config_param['control_loop_pos']['control_loop_pos_ver']['PID']['saturation'][0],
+                                        config_param['control_loop_pos']['control_loop_pos_ver']['PID']['saturation'][1])
+    #
+    self.flag_ctr_att_yaw = config_param['control_loop_pos']['control_loop_pos_yaw']['flag_ctr_att_yaw']
+    self.att_yaw_pid.setGainsPID(gain_P=config_param['control_loop_pos']['control_loop_pos_yaw']['PID']['gains']['gain_P'],
+                                  gain_I=config_param['control_loop_pos']['control_loop_pos_yaw']['PID']['gains']['gain_I'],
+                                  gain_D=config_param['control_loop_pos']['control_loop_pos_yaw']['PID']['gains']['gain_D'])
+    self.att_yaw_pid.setAntiWindUp(config_param['control_loop_pos']['control_loop_pos_yaw']['PID']['anti_wind_up'][0],
+                                    config_param['control_loop_pos']['control_loop_pos_yaw']['PID']['anti_wind_up'][1])
+    self.att_yaw_pid.setCtrCmdSaturation(config_param['control_loop_pos']['control_loop_pos_yaw']['PID']['saturation'][0],
+                                          config_param['control_loop_pos']['control_loop_pos_yaw']['PID']['saturation'][1])
+
+    
 
     # End
     return
+
 
   def setRobotPosRef(self, robot_posi_ref, robot_atti_quat_simp_ref):
 

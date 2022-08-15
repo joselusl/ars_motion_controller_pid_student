@@ -5,7 +5,9 @@ from numpy import *
 
 import os
 
-
+# pyyaml - https://pyyaml.org/wiki/PyYAMLDocumentation
+import yaml
+from yaml.loader import SafeLoader
 
 
 # ROS
@@ -81,6 +83,9 @@ class ArsMotionControllerRos:
   robot_vel_cmd_ref_sub = None
 
 
+  #
+  config_param = None
+
   # Motion controller
   motion_controller = ArsMotionController()
   
@@ -106,9 +111,38 @@ class ArsMotionControllerRos:
 
     #### READING PARAMETERS ###
     
-    # TODO
+    # Config param
+    default_config_param_yaml_file_name = os.path.join(pkg_path,'config','config_motion_controller_pid.yaml')
+    config_param_yaml_file_name_str = rospy.get_param('~config_param_motion_controller_pid_yaml_file', default_config_param_yaml_file_name)
+    print(config_param_yaml_file_name_str)
+    self.config_param_yaml_file_name = os.path.abspath(config_param_yaml_file_name_str)
 
     ###
+
+
+    # Load config param
+    with open(self.config_param_yaml_file_name,'r') as file:
+        # The FullLoader parameter handles the conversion from YAML
+        # scalar values to Python the dictionary format
+        self.config_param = yaml.load(file, Loader=SafeLoader)['motion_controller_pid']
+
+    if(self.config_param is None):
+      print("Error loading config param motion controller pid")
+    else:
+      print("Config param motion controller pid:")
+      print(self.config_param)
+
+
+    # Parameters
+    #
+    self.robot_frame = self.config_param['robot_frame']
+    self.world_frame = self.config_param['world_frame']
+    #
+    self.vel_loop_freq = self.config_param['control_loop_vel']['vel_loop_freq']
+    self.pos_loop_freq = self.config_param['control_loop_pos']['pos_loop_freq']
+    
+    #
+    self.motion_controller.setConfigParameters(self.config_param)
 
     
     # End
