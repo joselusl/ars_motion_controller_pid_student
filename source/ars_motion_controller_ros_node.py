@@ -24,7 +24,10 @@ def main():
   try:
     ars_motion_controller_ros.run()
   except rospy.ROSInterruptException:
+    ars_motion_controller_ros.stop()
     pass
+
+  ars_motion_controller_ros.close()
 
 
   return 0

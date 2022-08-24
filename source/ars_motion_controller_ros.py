@@ -86,6 +86,7 @@ class ArsMotionControllerRos:
   #
   config_param = None
 
+
   # Motion controller
   motion_controller = ArsMotionController()
   
@@ -103,6 +104,9 @@ class ArsMotionControllerRos:
 
     # Init ROS
     rospy.init_node(node_name, anonymous=True)
+
+    #
+    rospy.on_shutdown(self.stop)
 
     
     # Package path
@@ -188,6 +192,50 @@ class ArsMotionControllerRos:
   def run(self):
 
     rospy.spin()
+
+    return
+
+
+  def stop(self):
+
+    # Sleep to allow time to finish
+    rospy.sleep(0.5)
+
+    #
+    self.publishEmptyCmd(rospy.Time().now())
+
+    #
+    return
+
+
+  def close(self):
+
+    
+
+    return
+
+
+  def publishEmptyCmd(self, time_stamp=rospy.Time):
+
+    #
+    robot_velo_cmd_stamped_msg = TwistStamped()
+
+    robot_velo_cmd_stamped_msg.header.stamp = time_stamp
+    robot_velo_cmd_stamped_msg.header.frame_id = self.robot_frame
+
+    robot_velo_cmd_stamped_msg.twist.linear.x = 0.0
+    robot_velo_cmd_stamped_msg.twist.linear.y = 0.0
+    robot_velo_cmd_stamped_msg.twist.linear.z = 0.0
+
+    robot_velo_cmd_stamped_msg.twist.angular.x = 0.0
+    robot_velo_cmd_stamped_msg.twist.angular.y = 0.0
+    robot_velo_cmd_stamped_msg.twist.angular.z = 0.0
+
+    #
+    if(self.robot_vel_cmd_stamped_pub):
+      self.robot_vel_cmd_stamped_pub.publish(robot_velo_cmd_stamped_msg)
+    if(self.flag_pub_robot_vel_cmd_unstamped and self.robot_vel_cmd_unstamped_pub):
+      self.robot_vel_cmd_unstamped_pub.publish(robot_velo_cmd_stamped_msg.twist)
 
     return
 
@@ -328,8 +376,6 @@ class ArsMotionControllerRos:
     return
 
 
-
-
   def velLoopTimerCallback(self, timer_msg):
 
     # Get time
@@ -356,8 +402,3 @@ class ArsMotionControllerRos:
     
     # End
     return
-
-
-
-
-  
