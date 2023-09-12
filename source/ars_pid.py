@@ -64,11 +64,11 @@ class PID:
     self.ctr_cmd_sat['Min']=ctr_cmd_min
     return
 
-  def resetErrorIntegral():
+  def resetErrorIntegral(self):
     self.error_integral = 0.0
     return
 
-  def reset():
+  def reset(self):
     self.prev_time_stamp_ros = rospy.Time(0.0, 0.0)
     self.prev_error = 0.0
     self.error_integral = 0.0
@@ -101,14 +101,14 @@ class PID:
 
     # compute error derivative
     # TODO by student
-    # use
+    # use:
     # error_derivative
     # error, self.prev_error
     # delta_time
 
     # command
     # TODO (complete) by student
-    # use
+    # use:
     # error_integral, error_derivative
     # self.gains
     control_cmd = self.gains['P']*error
