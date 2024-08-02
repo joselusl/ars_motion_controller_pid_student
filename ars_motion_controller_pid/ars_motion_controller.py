@@ -7,14 +7,14 @@ import os
 
 
 # ROS
-
-import rospy
-
-#
-import ars_lib_helpers
+import rclpy
+from rclpy.time import Time
 
 #
-import ars_pid
+import ars_lib_helpers.ars_lib_helpers as ars_lib_helpers
+
+#
+import ars_motion_controller_pid.ars_pid as ars_pid
 
 
 
@@ -52,7 +52,7 @@ class ArsMotionController:
 
 
   # Commands
-  robot_velo_cmd_time_stamp = rospy.Time(0.0, 0.0)
+  robot_velo_cmd_time_stamp = Time()
   robot_velo_lin_cmd = None
   robot_velo_ang_cmd = None
   
@@ -62,13 +62,13 @@ class ArsMotionController:
   # Vel loop
   # Not needed!
   #
-  #vel_loop_time_stamp_ros = rospy.Time(0.0, 0.0)
+  #vel_loop_time_stamp_ros = Time()
   #vel_loop_out_lin_cmd = None
   #vel_loop_out_ang_cmd = None
   
   # Pos loop
   #
-  pos_loop_time_stamp_ros = rospy.Time(0.0, 0.0)
+  pos_loop_time_stamp_ros = Time()
   flag_set_pos_loop_out = False
   pos_loop_out_lin_cmd = None
   pos_loop_out_ang_cmd = None
@@ -105,7 +105,7 @@ class ArsMotionController:
   def __init__(self):
 
     # Commands
-    self.robot_velo_cmd_time_stamp = rospy.Time(0.0, 0.0)
+    self.robot_velo_cmd_time_stamp = Time()
     self.robot_velo_lin_cmd = np.zeros((3,), dtype=float)
     self.robot_velo_ang_cmd = np.zeros((1,), dtype=float)
 
@@ -136,14 +136,31 @@ class ArsMotionController:
     # Internal
     # Vel loop
     # Not needed!
-    #self.vel_loop_time_stamp_ros = rospy.Time(0.0, 0.0)
+    #self.vel_loop_time_stamp_ros = Time()
     #self.vel_loop_out_lin_cmd = np.zeros((3,1), dtype=float)
     #self.vel_loop_out_ang_cmd = np.zeros((1,1), dtype=float)
     # Pos loop
-    self.pos_loop_time_stamp_ros = rospy.Time(0.0, 0.0)
+    self.pos_loop_time_stamp_ros = Time()
     self.flag_set_pos_loop_out = False
     self.pos_loop_out_lin_cmd = np.zeros((3,), dtype=float)
     self.pos_loop_out_ang_cmd = np.zeros((1,), dtype=float)
+
+    # PIDs
+    # Pos
+    #
+    self.pos_hor_pid = ars_pid.PID()
+    #
+    self.pos_z_pid = ars_pid.PID()
+    #
+    self.att_yaw_pid = ars_pid.PID()
+
+    # Vel
+    #
+    self.vel_lin_hor_pid = ars_pid.PID()
+    #
+    self.vel_lin_z_pid = ars_pid.PID()
+    #
+    self.vel_ang_z_pid = ars_pid.PID()
 
     # End
     return

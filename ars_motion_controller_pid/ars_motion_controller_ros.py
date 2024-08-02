@@ -3,6 +3,8 @@
 import numpy as np
 from numpy import *
 
+import time
+
 import os
 
 # pyyaml - https://pyyaml.org/wiki/PyYAMLDocumentation
@@ -11,10 +13,11 @@ from yaml.loader import SafeLoader
 
 
 # ROS
+import rclpy
+from rclpy.node import Node
+from rclpy.time import Time
 
-import rospy
-
-import rospkg
+from ament_index_python.packages import get_package_share_directory
 
 from std_msgs.msg import Header
 
@@ -23,21 +26,16 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import TwistStamped
 
-
-
+#
+import ars_lib_helpers.ars_lib_helpers as ars_lib_helpers
 
 #
-from ars_motion_controller import *
-
-
-#
-import ars_lib_helpers
+from ars_motion_controller_pid.ars_motion_controller import *
 
 
 
 
-
-class ArsMotionControllerRos:
+class ArsMotionControllerRos(Node):
 
   #######
 
@@ -94,31 +92,35 @@ class ArsMotionControllerRos:
 
   #########
 
-  def __init__(self):
+  def __init__(self, node_name='ars_motion_controller_node'):
+    # Init ROS
+    super().__init__(node_name)
+
+    #
+    self.__init(node_name)
 
     return
 
 
-  def init(self, node_name='ars_motion_controller_node'):
-    #
-
-    # Init ROS
-    rospy.init_node(node_name, anonymous=True)
-
-    #
-    rospy.on_shutdown(self.stop)
-
+  def __init(self, node_name='ars_motion_controller_node'):
     
     # Package path
-    pkg_path = rospkg.RosPack().get_path('ars_motion_controller_pid')
+    try:
+      pkg_path = get_package_share_directory('ars_motion_controller_pid')
+      self.get_logger().info(f"The path to the package is: {pkg_path}")
+    except ModuleNotFoundError:
+      self.get_logger().info("Package not found")
     
 
     #### READING PARAMETERS ###
     
     # Config param
     default_config_param_yaml_file_name = os.path.join(pkg_path,'config','config_motion_controller_pid.yaml')
-    config_param_yaml_file_name_str = rospy.get_param('~config_param_motion_controller_pid_yaml_file', default_config_param_yaml_file_name)
-    print(config_param_yaml_file_name_str)
+    # Declare the parameter with a default value
+    self.declare_parameter('config_param_motion_controller_pid_yaml_file', default_config_param_yaml_file_name)
+    # Get the parameter value
+    config_param_yaml_file_name_str = self.get_parameter('config_param_motion_controller_pid_yaml_file').get_parameter_value().string_value
+    self.get_logger().info(config_param_yaml_file_name_str)
     self.config_param_yaml_file_name = os.path.abspath(config_param_yaml_file_name_str)
 
     ###
@@ -131,10 +133,10 @@ class ArsMotionControllerRos:
         self.config_param = yaml.load(file, Loader=SafeLoader)['motion_controller_pid']
 
     if(self.config_param is None):
-      print("Error loading config param motion controller pid")
+      self.get_logger().info("Error loading config param motion controller pid")
     else:
-      print("Config param motion controller pid:")
-      print(self.config_param)
+      self.get_logger().info("Config param motion controller pid:")
+      self.get_logger().info(str(self.config_param))
 
 
     # Parameters
@@ -157,32 +159,32 @@ class ArsMotionControllerRos:
 
     # Subscriber
     # 
-    self.robot_pose_sub = rospy.Subscriber('robot_pose', PoseStamped, self.robotPoseCallback)
+    self.robot_pose_sub = self.create_subscription(PoseStamped, 'robot_pose', self.robotPoseCallback, qos_profile=10)
     #
-    self.robot_vel_world_sub = rospy.Subscriber('robot_velocity_world', TwistStamped, self.robotVelWorldCallback)
+    self.robot_vel_world_sub = self.create_subscription(TwistStamped, 'robot_velocity_world', self.robotVelWorldCallback, qos_profile=10)
     
     # 
-    self.robot_pose_ref_sub = rospy.Subscriber('robot_pose_ref', PoseStamped, self.robotPoseRefCallback)
+    self.robot_pose_ref_sub = self.create_subscription(PoseStamped, 'robot_pose_ref', self.robotPoseRefCallback, qos_profile=10)
     #
-    self.robot_vel_world_ref_sub = rospy.Subscriber('robot_velocity_world_ref', TwistStamped, self.robotVelWorldRefCallback)
+    self.robot_vel_world_ref_sub = self.create_subscription(TwistStamped, 'robot_velocity_world_ref', self.robotVelWorldRefCallback, qos_profile=10)
     #
-    self.robot_vel_cmd_ref_sub = rospy.Subscriber('robot_cmd_ref', TwistStamped, self.robotCmdRefCallback)
+    self.robot_vel_cmd_ref_sub = self.create_subscription(TwistStamped, 'robot_cmd_ref', self.robotCmdRefCallback, qos_profile=10)
 
 
     # Publisher
     # Robot cmd stamped
-    self.robot_vel_cmd_stamped_pub = rospy.Publisher('robot_cmd_ctr_stamped', TwistStamped, queue_size=1)
+    self.robot_vel_cmd_stamped_pub = self.create_publisher(TwistStamped, 'robot_cmd_ctr_stamped', qos_profile=10)
     # Robot cmd unstamped
     if(self.flag_pub_robot_vel_cmd_unstamped):
-      self.robot_vel_cmd_unstamped_pub = rospy.Publisher('robot_ctr_cmd', Twist, queue_size=1)
+      self.robot_vel_cmd_unstamped_pub = self.create_publisher(Twist, 'robot_ctr_cmd', qos_profile=10)
 
 
 
     # Timers
     #
-    self.vel_loop_timer = rospy.Timer(rospy.Duration(1.0/self.vel_loop_freq), self.velLoopTimerCallback)
+    self.vel_loop_timer = self.create_timer(1.0/self.vel_loop_freq, self.velLoopTimerCallback)
     #
-    self.pos_loop_timer = rospy.Timer(rospy.Duration(1.0/self.pos_loop_freq), self.posLoopTimerCallback)
+    self.pos_loop_timer = self.create_timer(1.0/self.pos_loop_freq, self.posLoopTimerCallback)
 
 
     # End
@@ -191,7 +193,7 @@ class ArsMotionControllerRos:
 
   def run(self):
 
-    rospy.spin()
+    rclpy.spin(self)
 
     return
 
@@ -199,10 +201,10 @@ class ArsMotionControllerRos:
   def stop(self):
 
     # Sleep to allow time to finish
-    rospy.sleep(0.5)
+    time.sleep(0.5)
 
     #
-    self.publishEmptyCmd(rospy.Time().now())
+    self.publishEmptyCmd(self.get_clock().now())
 
     #
     return
@@ -215,12 +217,12 @@ class ArsMotionControllerRos:
     return
 
 
-  def publishEmptyCmd(self, time_stamp=rospy.Time):
+  def publishEmptyCmd(self, time_stamp=Time()):
 
     #
     robot_velo_cmd_stamped_msg = TwistStamped()
 
-    robot_velo_cmd_stamped_msg.header.stamp = time_stamp
+    robot_velo_cmd_stamped_msg.header.stamp = time_stamp.to_msg()
     robot_velo_cmd_stamped_msg.header.frame_id = self.robot_frame
 
     robot_velo_cmd_stamped_msg.twist.linear.x = 0.0
@@ -355,7 +357,7 @@ class ArsMotionControllerRos:
     #
     robot_velo_cmd_stamped_msg = TwistStamped()
 
-    robot_velo_cmd_stamped_msg.header.stamp = robot_velo_cmd_time_stamp
+    robot_velo_cmd_stamped_msg.header.stamp = robot_velo_cmd_time_stamp.to_msg()
     robot_velo_cmd_stamped_msg.header.frame_id = self.robot_frame
 
     robot_velo_cmd_stamped_msg.twist.linear.x = robot_velo_lin_cmd[0]
@@ -376,10 +378,10 @@ class ArsMotionControllerRos:
     return
 
 
-  def velLoopTimerCallback(self, timer_msg):
+  def velLoopTimerCallback(self):
 
     # Get time
-    time_stamp_current = rospy.Time.now()
+    time_stamp_current = self.get_clock().now()
 
     #
     self.motion_controller.velLoopMotionController(time_stamp_current)
@@ -391,10 +393,10 @@ class ArsMotionControllerRos:
     return
 
 
-  def posLoopTimerCallback(self, timer_msg):
+  def posLoopTimerCallback(self):
 
     # Get time
-    time_stamp_current = rospy.Time.now()
+    time_stamp_current = self.get_clock().now()
 
     #
     self.motion_controller.posLoopMotionController(time_stamp_current)
