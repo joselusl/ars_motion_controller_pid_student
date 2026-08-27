@@ -20,7 +20,6 @@ setup(
  maintainer_email='joseluis.sanlop@gmail.com',
  description='TODO: Package description',
  license='BSD',
- tests_require=['pytest'],
  entry_points={'console_scripts': [
  		'ars_motion_controller_ros_node = ars_motion_controller_pid.ars_motion_controller_ros_node:main',
         ],},
